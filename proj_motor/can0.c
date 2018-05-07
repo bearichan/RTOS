@@ -123,7 +123,8 @@ void CAN0_Open(void){uint32_t volatile delay;
 }
 
 // send 4 bytes of data to other microcontroller 
-void CAN0_SendData(uint8_t data[4]){
+void CAN0_SendData(uint8_t data[4])
+{
 // in this case there is just one type, but you could accept multiple ID types
   CAN0_Setup_Message_Object(XMT_ID, NULL, 8, data, XMT_ID, MSG_OBJ_TYPE_TX);
 }
@@ -135,7 +136,8 @@ int CAN0_CheckMail(void){
 }
 // if receive data is ready, gets the data and returns true
 // if no receive data is ready, returns false
-int CAN0_GetMailNonBlock(uint8_t data[4]){
+int CAN0_GetMailNonBlock(uint8_t data[4])
+{
   if(MailFlag){
     data[0] = RCVData[0];
     data[1] = RCVData[1];
@@ -148,11 +150,17 @@ int CAN0_GetMailNonBlock(uint8_t data[4]){
 }
 // if receive data is ready, gets the data 
 // if no receive data is ready, it waits until it is ready
-void CAN0_GetMail(uint8_t data[4]){
+void CAN0_GetMail(uint8_t data[4])
+{
   while(MailFlag==false){};
   data[0] = RCVData[0];
   data[1] = RCVData[1];
   data[2] = RCVData[2];
   data[3] = RCVData[3];
   MailFlag = false;
+
 }
+
+
+
+

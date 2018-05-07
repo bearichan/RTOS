@@ -79,7 +79,7 @@ void OS_MailBox_Init(void);
 // Outputs: none
 // This function will be called from a foreground thread
 // It will spin/block if the MailBox contains data not yet received 
-void OS_MailBox_Send(unsigned long *data);
+void OS_MailBox_Send( unsigned long *data);
 
 // ******** OS_MailBox_Recv ************
 // remove mail from the MailBox
@@ -87,7 +87,7 @@ void OS_MailBox_Send(unsigned long *data);
 // Outputs: data received
 // This function will be called from a foreground thread
 // It will spin/block if the MailBox is empty 
-void OS_MailBox_Recv(unsigned long *data);
+void OS_MailBox_Recv( unsigned long *data);
 
 // ******** OS_bSignal ************
 // Lab2 spinlock, set to 1

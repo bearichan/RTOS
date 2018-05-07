@@ -82,7 +82,7 @@ void ADC_Init(void){
 }
 
 void ADC0Seq1_Handler(void) {
-	unsigned long data[4];
+	uint32_t data[4];
 	data[0] = ADC0_SSFIFO1_R&0xFFF;   // 3) read result
 	data[1] = ADC0_SSFIFO1_R&0xFFF;   // 3) read result
 	data[2] = ADC0_SSFIFO1_R&0xFFF;   // 3) read result

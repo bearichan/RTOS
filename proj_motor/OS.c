@@ -340,11 +340,7 @@ void SysTick_Handler(void) {
 	TCB * next;
 	
 	systemTime++;
-	if(curTCB != NULL) {
-		volatile int x;
-		x = 1;
-	}
-	while(curTCB != NULL && sleepDLL.size != 0) { // iterate through sleep queue and decrement counters
+	while(curTCB != NULL) { // iterate through sleep queue and decrement counters
 		next = curTCB->nextTCB == sleepDLL.head ? NULL : curTCB->nextTCB;
 
 		curTCB->sleepCtr--;
@@ -500,7 +496,7 @@ void OS_MailBox_Init(void) {
  * Put data into the mailbox. Spins if data has not yet been received from the mailbox.
  * @param data data to put in the mailbox
  */
-void OS_MailBox_Send(unsigned long *data) {
+void OS_MailBox_Send( unsigned long *data) {
 	if(mailboxAck.Value == 1) {
 		memcpy(mailboxValue, data, sizeof(mailboxValue));
 		OS_Signal(&mailboxRdy);
@@ -515,7 +511,7 @@ void OS_MailBox_Send(unsigned long *data) {
  * remove mail from the mailbox. Spins if data has not been put into the mailbox
  * @return data from mailbox
  */
-void OS_MailBox_Recv(unsigned long *data) {
+void OS_MailBox_Recv( unsigned long  *data) {
 	OS_Wait(&mailboxRdy);
 	memcpy(data, mailboxValue, sizeof(mailboxValue));
 	OS_Signal(&mailboxAck);

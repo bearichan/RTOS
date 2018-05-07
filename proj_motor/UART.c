@@ -100,9 +100,96 @@ void UART_Init(void){
                                         // UART0=priority 2
   NVIC_PRI1_R = (NVIC_PRI1_R&0xFFFF00FF)|0x00004000; // bits 13-15
   NVIC_EN0_R = NVIC_EN0_INT5;           // enable interrupt 5 in NVIC
-	OS_InitSemaphore(&rxLock, 0);
-	OS_InitSemaphore(&txLock, FIFOSIZE);
+  OS_InitSemaphore(&rxLock, 0);
+  OS_InitSemaphore(&txLock, FIFOSIZE);
 }
+
+void UART2_Init(void){
+  SYSCTL_RCGCUART_R |= 0x04;            // activate UART2
+  SYSCTL_RCGCGPIO_R |= 0x08;            // activate port D
+  GPIO_PORTD_LOCK_R = 0x4C4F434B;
+  GPIO_PORTD_CR_R = 0xC0;      // enable commit for PF0
+  //  RxFifo_Init();                        // initialize empty FIFOs
+//  TxFifo_Init();
+  UART2_CTL_R &= ~UART_CTL_UARTEN;      // disable UART
+  UART2_IBRD_R = 43;                    // IBRD = int(50,000,000 / (16 * 115,200)) = int(27.1267)
+  UART2_FBRD_R = 26;                     // FBRD = int(0.1267 * 64 + 0.5) = 8
+                                        // 8 bit word length (no parity bits, one stop bit, FIFOs)
+  UART2_LCRH_R = (UART_LCRH_WLEN_8|UART_LCRH_FEN);
+  UART2_IFLS_R &= ~0x3F;                // clear TX and RX interrupt FIFO level fields
+                                        // configure interrupt for TX FIFO <= 1/8 full
+                                        // configure interrupt for RX FIFO >= 1/8 full
+  UART2_IFLS_R += (UART_IFLS_RX1_8);
+                                        // enable TX and RX FIFO interrupts and RX time-out interrupt
+  UART2_IM_R |= (UART_IM_RXIM|UART_IM_TXIM|UART_IM_RTIM);
+  UART2_CTL_R |= 0x301;                 // enable UART
+  GPIO_PORTD_AFSEL_R |= 0xC0;           // enable alt funct on PD67
+  GPIO_PORTD_DEN_R |= 0xC0;             // enable digital I/O on PA1-0
+                                        
+  GPIO_PORTD_PCTL_R = (GPIO_PORTD_PCTL_R&0x00FFFFFF)+0x11000000;
+  GPIO_PORTD_AMSEL_R = 0;               // disable analog functionality on PA
+                                        // UART0=priority 2
+  NVIC_PRI8_R = (NVIC_PRI8_R&0xFFFF00FF)|0x00000000; // bits  
+
+  //int 33
+  NVIC_EN1_R = NVIC_EN0_INT1;           // enable interrupt 5 in NVIC
+
+}
+
+uint8_t letter[6];
+unsigned long int offset_pixel_num;
+//uint16_t ;
+int static MailFlag;
+void UART2_Handler(void)
+{
+  if(UART2_RIS_R&UART_RIS_TXRIS)
+  {       // hardware TX FIFO <= 2 items
+    UART2_ICR_R = UART_ICR_TXIC;        // acknowledge TX FIFO
+    // copy from software TX FIFO to hardware TX FIFO
+//    copySoftwareToHardware();
+//    if(TxFifo_Size() == 0){             // software TX FIFO is empty
+//      UART0_IM_R &= ~UART_IM_TXIM;      // disable TX FIFO interrupt
+//    }
+  }
+  if(UART2_RIS_R&UART_RIS_RXRIS)
+  {       // hardware RX FIFO >= 2 items
+    UART2_ICR_R = UART_ICR_RXIC;        // acknowledge RX FIFO
+    // copy from hardware RX FIFO to software RX FIFO
+//    copyHardwareToSoftware();
+  }
+  if(UART2_RIS_R&UART_RIS_RTRIS)
+  {       // receiver timed out
+    UART2_ICR_R = UART_ICR_RTIC;        // acknowledge receiver time out
+//    while(((UART2_FR_R&UART_FR_RXFE) == 0))
+//    {
+      letter[5] = letter[4];
+      letter[4] = letter[3];
+      letter[3] = letter[2];
+      letter[2] = letter[1];
+      letter[1] = letter[0];
+      letter[0] = UART2_DR_R;
+      if((letter[5] == 0x7F)&&(letter[0] == 0xF7))
+      {
+           offset_pixel_num = (letter[4] << 24) | letter[3]<<16 | (letter[2] << 8) | letter[1]   ;
+//         offset =  (letter[2] << 8) | letter[1];
+//         pixel_num =  (letter[4] << 8) | letter[3];
+          OS_MailBox_Send(&offset_pixel_num );
+      }
+     
+    //    }
+  }
+    // copy from hardware RX FIFO to software RX FIFO
+//    copyHardwareToSoftware();
+  
+}
+//int16_t uart2_GetMail(int16_t mail_offset)
+//{
+//  while(MailFlag==false){};
+//  mail_offset = offset;
+//  MailFlag = false;
+
+//}
+
 // copy from hardware RX FIFO to software RX FIFO
 // stop when hardware RX FIFO is empty or software RX FIFO is full
 void static copyHardwareToSoftware(void){
@@ -110,7 +197,7 @@ void static copyHardwareToSoftware(void){
   while(((UART0_FR_R&UART_FR_RXFE) == 0) && (RxFifo_Size() < (FIFOSIZE - 1))){
     letter = UART0_DR_R;
     RxFifo_Put(letter);
-		OS_Signal(&rxLock);
+    OS_Signal(&rxLock);
   }
 }
 // copy from software TX FIFO to hardware TX FIFO

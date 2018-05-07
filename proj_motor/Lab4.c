@@ -78,6 +78,8 @@
 #include "Processing.h"
 #include "ST7735.h"
 #include "pwm.h"
+
+#include "uart.h"
 #define IR
 //#define PING
 
@@ -132,8 +134,9 @@ int main(void){        // lab 4 real main
 //  Left_InitB(12500, 1000,1);          // initialize PWM0, 100 Hz
 //  Right_Init(12500, 1000,1);   // initialize PWM0, 100 Hz
   
-  Servo_Init(25000, 2000);   
-  //  Servo_Init(25000, 2550);   
+  Servo_Init(25000, SERVOMID);   
+  
+  UART_Init();  //  Servo_Init(25000, 2550);   
   
 //*******attach background tasks***********
 

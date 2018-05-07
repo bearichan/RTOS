@@ -40,7 +40,7 @@
 // Input: none
 // Output: none
 void UART_Init(void);
-
+void UART2_Init(void);
 //------------UART_InChar------------
 // Wait for new serial port input
 // Input: none
@@ -75,7 +75,7 @@ uint32_t UART_InUDec(void);
 // Output: none
 // Variable format 1-10 digits with no space before or after
 void UART_OutUDec(uint32_t n);
-
+void uart2_GetMail(int16_t);
 //---------------------UART_InUHex----------------------------------------
 // Accepts ASCII input in unsigned hexadecimal (base 16) format
 // Input: none
